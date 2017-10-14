@@ -1,4 +1,4 @@
-package hexalog
+package hexarocksdb
 
 import (
 	"bytes"
@@ -7,22 +7,23 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hexablock/hexalog"
 	"github.com/hexablock/hexatype"
 )
 
-func Test_RocksEntryStore(t *testing.T) {
+func Test_EntryStore(t *testing.T) {
 
 	tmpdir, _ := ioutil.TempDir("/tmp", "hexalog-")
 	defer os.RemoveAll(tmpdir)
 
-	rdb := NewRocksEntryStore()
+	rdb := NewEntryStore()
 	if err := rdb.Open(tmpdir); err != nil {
 		t.Fatal(err)
 	}
 
 	defer rdb.Close()
 
-	ent := &Entry{
+	ent := &hexalog.Entry{
 		Previous:  make([]byte, 32),
 		Key:       []byte("key"),
 		Timestamp: uint64(time.Now().UnixNano()),
@@ -51,11 +52,9 @@ func Test_RocksEntryStore(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	enterr, err := rdb.Get(id)
-	if err == nil {
-		t.Fatalf("should fail: '%+v'", enterr)
-	} else {
-		t.Log(err)
+	_, err = rdb.Get(id)
+	if err != hexatype.ErrEntryNotFound {
+		t.Fatalf("should fail with='%v' got='%v'", hexatype.ErrEntryNotFound, err)
 	}
 
 }
